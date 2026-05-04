@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="VOLUME: The quantitative market for music streams. Integrating SVVG models, Asian options, and Oracle feeds to create a win-win ecosystem for creators and investors.">
+  <title>VOLUME | Quantitative Music Derivatives</title>
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800;900&family=JetBrains+Mono:wght@400;700&display=swap');
+
+    :root {
+      /* Dark Theme / Fintech Cyberpunk Palette */
+      --bg-base: #050505;
+      --bg-panel: #111216;
+      --bg-card: rgba(255, 255, 255, 0.03);
+      
+      --text-main: #f1f5f9;
+      --text-muted: #94a3b8;
+      
+      --accent-cyan: #00f0ff;
+      --accent-purple: #8b5cf6;
+      --accent-pink: #f43f5e;
+      --accent-green: #10b981;
+      
+      --border-color: rgba(255, 255, 255, 0.08);
+      --border-light: rgba(255, 255, 255, 0.15);
+      
+      --shadow-glow: 0 0 25px rgba(0, 240, 255, 0.15);
+      --shadow-purple: 0 0 30px rgba(139, 92, 246, 0.2);
+      
+      --radius-xl: 16px;
+      --radius-lg: 12px;
+      --radius-md: 8px;
+      --max: 1200px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    
+    body {
+      font-family: 'Inter', sans-serif;
+      color: var(--text-main);
+      background-color: var(--bg-base);
+      background-image: 
+        radial-gradient(circle at 15% 50%, rgba(139, 92, 246, 0.08), transparent 25%),
+        radial-gradient(circle at 85% 30%, rgba(0, 240, 255, 0.05), transparent 25%),
+        linear-gradient(rgba(0, 240, 255, 0.02) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 240, 255, 0.02) 1px, transparent 1px);
+      background-size: auto, auto, 50px 50px, 50px 50px;
+      background-attachment: fixed;
+      line-height: 1.7;
+      overflow-x: hidden;
+    }
+
+    a { color: inherit; text-decoration: none; }
+    img, svg { max-width: 100%; display: block; }
+
+    .container {
+      width: min(100% - 48px, var(--max));
+      margin: 0 auto;
+    }
+
+    .section { padding: 100px 0; position: relative; }
+    .section::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; height: 1px;
+      background: linear-gradient(90deg, transparent, var(--border-light), transparent);
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      border: 1px solid var(--accent-cyan);
+      border-radius: 4px;
+      color: var(--accent-cyan);
+      background: rgba(0, 240, 255, 0.05);
+      font-weight: 700;
+      font-size: 0.85rem;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      margin-bottom: 16px;
+    }
+    
+    .badge.purple {
+      border-color: var(--accent-purple);
+      color: var(--accent-purple);
+      background: rgba(139, 92, 246, 0.05);
+    }
+
+    .badge.green {
+      border-color: var(--accent-green);
+      color: var(--accent-green);
+      background: rgba(16, 185, 129, 0.05);
+    }
+
+    h1, h2, h3 { color: #ffffff; line-height: 1.2; letter-spacing: -0.02em; }
+    h1 { font-size: clamp(2.5rem, 5vw, 4.5rem); margin-bottom: 24px; font-weight: 900; }
+    h2 { font-size: clamp(2rem, 4vw, 3rem); margin-bottom: 20px; font-weight: 800; }
+    h3 { font-size: 1.4rem; margin-bottom: 12px; font-weight: 700; }
+
+    p { color: var(--text-muted); font-size: 1.1rem; }
+    .lead { font-size: 1.25rem; color: #cbd5e1; max-width: 800px; margin-bottom: 40px; }
+
+    /* Navigation */
+    .nav {
+      position: fixed;
+      top: 0; width: 100%;
+      z-index: 1000;
+      backdrop-filter: blur(20px);
+      background: rgba(5, 5, 5, 0.8);
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .nav-inner {
+      height: 70px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .brand {
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 900;
+      font-size: 1.4rem;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      letter-spacing: -0.05em;
+    }
+
+    .brand-icon {
+      color: var(--accent-cyan);
+      font-size: 1.6rem;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 24px;
+      align-items: center;
+      font-weight: 600;
+      font-size: 0.95rem;
+    }
+
+    .nav-links a:hover { color: var(--accent-cyan); transition: 0.2s; }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 12px 24px;
+      border-radius: 4px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-size: 1rem;
+      letter-spacing: 0.02em;
+    }
+
+    .btn-primary {
+      color: #000;
+      background: var(--accent-cyan);
+      box-shadow: var(--shadow-glow);
+    }
+    .btn-primary:hover {
+      background: #fff;
+      box-shadow: 0 0 30px rgba(255, 255, 255, 0.4);
+      transform: translateY(-2px);
+    }
+
+    .btn-outline {
+      color: #fff;
+      background: transparent;
+      border: 1px solid var(--border-light);
+    }
+    .btn-outline:hover {
+      border-color: var(--accent-cyan);
+      color: var(--accent-cyan);
+      transform: translateY(-2px);
+    }
+
+    /* Hero Section */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      padding-top: 70px;
+    }
+
+    .hero-content { max-width: 900px; }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 24px;
+      margin-top: 60px;
+    }
+
+    .stat-box {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      padding: 24px;
+      border-radius: var(--radius-md);
+      transition: 0.3s ease;
+    }
+    .stat-box:hover { background: rgba(255, 255, 255, 0.05); }
+    
+    .stat-box strong {
+      display: block;
+      font-size: 1.35rem;
+      color: #fff;
+      margin-bottom: 8px;
+    }
+
+    /* Cards & Grids */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 30px;
+    }
+    
+    .grid-4 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 24px;
+    }
+
+    .card {
+      background: var(--bg-panel);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: 32px;
+      transition: transform 0.3s ease, border-color 0.3s ease;
+    }
+    .card:hover {
+      transform: translateY(-5px);
+      border-color: var(--accent-cyan);
+    }
+
+    .card-icon {
+      font-size: 2.5rem;
+      margin-bottom: 20px;
+      color: var(--accent-cyan);
+    }
+
+    /* Highlight Box */
+    .protect-panel {
+      background: linear-gradient(135deg, rgba(16, 185, 129, 0.05), transparent);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      border-radius: var(--radius-lg);
+      padding: 32px;
+      margin-top: 30px;
+    }
+    .protect-panel h3 { color: var(--accent-green); display: flex; align-items: center; gap: 10px; }
+    
+    .danger-panel {
+      background: linear-gradient(135deg, rgba(244, 63, 94, 0.05), transparent);
+      border: 1px solid rgba(244, 63, 94, 0.3);
+      border-radius: var(--radius-lg);
+      padding: 32px;
+      margin-top: 30px;
+    }
+    .danger-panel h3 { color: var(--accent-pink); display: flex; align-items: center; gap: 10px; }
+
+    /* Comparison Table */
+    .table-container {
+      width: 100%;
+      overflow-x: auto;
+      background: var(--bg-panel);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border-color);
+      margin-top: 40px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 900px;
+    }
+
+    th, td {
+      padding: 24px;
+      text-align: left;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    th {
+      font-weight: 800;
+      color: #fff;
+      background: rgba(255, 255, 255, 0.02);
+      text-transform: uppercase;
+      font-size: 0.9rem;
+      letter-spacing: 0.05em;
+    }
+
+    td { color: var(--text-muted); font-weight: 500; }
+    td strong { color: #fff; display: block; margin-bottom: 4px; }
+
+    .highlight-col {
+      background: rgba(0, 240, 255, 0.03);
+      border-left: 1px solid rgba(0, 240, 255, 0.2);
+      border-right: 1px solid rgba(0, 240, 255, 0.2);
+    }
+    th.highlight-col {
+      color: var(--accent-cyan);
+      border-top: 2px solid var(--accent-cyan);
+    }
+
+    .check { color: var(--accent-green); font-weight: 900; margin-right: 8px;}
+    .cross { color: var(--accent-pink); font-weight: 900; margin-right: 8px;}
+
+    /* Matrix */
+    .matrix-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 30px;
+      margin-top: 40px;
+    }
+
+    .matrix-col {
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      background: var(--bg-panel);
+    }
+
+    .matrix-header {
+      padding: 24px;
+      background: rgba(255, 255, 255, 0.03);
+      border-bottom: 1px solid var(--border-color);
+      text-align: center;
+    }
+    .matrix-header h3 { margin: 0; color: #fff; }
+    .matrix-header span { font-weight: 700; font-size: 0.9rem; }
+
+    .call-header span { color: var(--accent-cyan); }
+    .put-header span { color: var(--accent-purple); }
+
+    .matrix-body { padding: 32px; }
+    .matrix-item { margin-bottom: 32px; }
+    .matrix-item:last-child { margin-bottom: 0; }
+    
+    .matrix-title {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+      color: #fff;
+      font-size: 1.2rem;
+      font-weight: 800;
+    }
+    .matrix-title .tag {
+      font-size: 0.75rem;
+      padding: 2px 8px;
+      border-radius: 4px;
+      background: rgba(255, 255, 255, 0.1);
+      text-transform: uppercase;
+    }
+    .tag-long { color: var(--accent-green); background: rgba(16, 185, 129, 0.1) !important; }
+    .tag-short { color: var(--accent-pink); background: rgba(244, 63, 94, 0.1) !important; }
+
+    /* Interactive Terminal Look */
+    .code-block {
+      background: #000;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 24px;
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--accent-cyan);
+      margin-top: 50px;
+      box-shadow: 0 0 30px rgba(0, 240, 255, 0.05);
+    }
+    .code-line { margin-bottom: 8px; font-size: 0.95rem; }
+    .code-comment { color: #64748b; }
+    .code-keyword { color: var(--accent-purple); }
+    .code-string { color: #cbd5e1; }
+    
+    .cursor {
+      display: inline-block;
+      width: 10px; height: 18px;
+      background: var(--accent-cyan);
+      animation: blink 1s infinite;
+      vertical-align: middle;
+      margin-left: 5px;
+    }
+    @keyframes blink { 0%, 50% { opacity: 1; } 51%, 100% { opacity: 0; } }
+
+    @media (max-width: 768px) {
+      .matrix-grid, .grid-2 { grid-template-columns: 1fr; }
+      .nav-links { display: none; }
+      .section { padding: 60px 0; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav class="nav">
+    <div class="container nav-inner">
+      <div class="brand">
+        <span class="brand-icon">⏣</span>
+        VOLUME
+      </div>
+      <div class="nav-links">
+        <a href="#engine">Risk Engine</a>
+        <a href="#hedging">Dynamic Hedging</a>
+        <a href="#comparison">Market Edge</a>
+        <a href="#matrix">Ecosystem</a>
+      </div>
+    </div>
+  </nav>
+
+  <main>
+    <!-- Hero -->
+    <section class="hero">
+      <div class="container">
+        <div class="hero-content">
+          <span class="badge">Quant Data Engine</span>
+          <h1>Transforming intangible music streams into tradable financial assets.</h1>
+          <p class="lead">
+            Breaking the limits of traditional copyright buyouts. Leveraging "Stream Options" and the SVVG pricing model, we build downside insurance for artists and high-liquidity hedging tools for investors—all without surrendering IP.
+          </p>
+          <div style="display: flex; gap: 16px;">
+            <a href="#matrix" class="btn btn-primary">Explore Ecosystem</a>
+            <a href="#engine" class="btn btn-outline">View Risk Engine</a>
+          </div>
+        </div>
+
+        <div class="hero-grid">
+          <div class="stat-box" style="border-left: 4px solid var(--accent-cyan);">
+            <strong>SVVG Oracle Pricing</strong>
+            <p>Capturing the inherent jumps and skewness of viral trends to instantly calibrate option pricing and prevent model failures.</p>
+          </div>
+          <div class="stat-box" style="border-left: 4px solid var(--accent-purple);">
+            <strong>Asian Option Defense</strong>
+            <p>Settling on moving stream averages to significantly raise the cost of view-botting, effectively killing artificial hype.</p>
+          </div>
+          <div class="stat-box" style="border-left: 4px solid var(--accent-green);">
+            <strong>Dynamic Hedging</strong>
+            <p>Providing Put Options for downside protection and utilizing composite indices to eliminate idiosyncratic single-track default risks.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Problem & Solutions -->
+    <section id="engine" class="section">
+      <div class="container">
+        <span class="badge purple">Risk Management</span>
+        <h2>Core Defense Mechanisms & Risk Engine</h2>
+        <p class="lead">When music streams intersect with financial derivatives, manipulation and moral hazards are inevitable. We deployed a 4-tier defense architecture to ensure market stability.</p>
+
+        <div class="grid-4">
+          <div class="card">
+            <div class="card-icon">🛡️</div>
+            <h3>1. Anti-Bot Manipulation</h3>
+            <p><strong>Challenge:</strong> Click farms orchestrating fake viral Hawkes processes.<br><br><strong>Solution:</strong> Implementing <b>Asian Options</b>. Fraudsters must continuously purchase streams to maintain the average price over time, exponentially raising the cost of cheating.</p>
+          </div>
+          
+          <div class="card">
+            <div class="card-icon">⚖️</div>
+            <h3>2. Moral Hazard Prevention</h3>
+            <p><strong>Challenge:</strong> Artists buying Put Options and abandoning all marketing efforts.<br><br><strong>Solution:</strong> Introducing <b>Co-Insurance / Deductibles</b>. Covering only 70% of expected streams, forcing creators to maintain "skin in the game" and active promotion.</p>
+          </div>
+
+          <div class="card">
+            <div class="card-icon">🌋</div>
+            <h3>3. Fat-Tail Default Control</h3>
+            <p><strong>Challenge:</strong> Music virality creates extreme kurtosis, risking market maker margin depletion.<br><br><strong>Solution:</strong> Encouraging the issuance of <b>Composite Stream Indices</b> across genres, neutralizing single-asset outlier risks, supported by dynamic margin calls.</p>
+          </div>
+
+          <div class="card">
+            <div class="card-icon">📊</div>
+            <h3>4. Model Calibration</h3>
+            <p><strong>Challenge:</strong> Traditional BSM assumes continuous prices, failing to map sudden track hype.<br><br><strong>Solution:</strong> Integrating Prediction Markets with the <b>SVVG Model</b> to capture the Variance Gamma process, properly pricing sudden jumps and skewness.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Rebalancing / Downside Protection -->
+    <section id="hedging" class="section">
+      <div class="container">
+        <span class="badge green">Downside Protection</span>
+        <h2>Differentiated Hedging: From Solo Risk to Safety Nets</h2>
+        <p class="lead">Beyond offering speculative leverage, VOLUME provides creators with the crucial hedging infrastructure missing in traditional music markets.</p>
+
+        <div class="grid-2">
+          <div class="danger-panel">
+            <h3><span style="font-size: 1.5rem;">✕</span> Traditional Music Market</h3>
+            <p style="margin-top: 16px; color: #fff; font-weight: 600;">Creators absorb 100% of sunk costs</p>
+            <p style="margin-top: 8px;">In traditional digital distribution, artists bear the full weight of production and marketing costs. If a release fails to break algorithmic thresholds, the creator faces absolute financial loss with zero safety net.</p>
+          </div>
+
+          <div class="protect-panel">
+            <h3><span style="font-size: 1.5rem;">✓</span> VOLUME: Put Option Protection</h3>
+            <p style="margin-top: 16px; color: #fff; font-weight: 600;">Trigger payouts to recover capital</p>
+            <p style="margin-top: 8px;"><b>Dynamic Hedging:</b> Artists fearing a flop can purchase Put Options. If actual streams fall below the strike price (e.g., missing 5M streams), smart contracts auto-execute payouts, turning intangible metrics into a solid cash floor.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Competitor Analysis -->
+    <section id="comparison" class="section">
+      <div class="container">
+        <span class="badge">Market Edge</span>
+        <h2>Market Solutions & Competitor Analysis</h2>
+        <p class="lead">Unlike royalty buyouts or fragmented crowdfunding, VOLUME's stream options offer unparalleled liquidity and IP sovereignty.</p>
+
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th style="width: 25%;">Platform & Counterparts</th>
+                <th>Core Trading Asset</th>
+                <th>Impact on Artists</th>
+                <th class="highlight-col">VOLUME Ecosystem</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>
+                  <strong>Traditional Royalty Auctions</strong>
+                  <span style="font-size: 0.85rem; color: var(--accent-purple);">e.g., Royalty Exchange</span>
+                </td>
+                <td>Fractionalized catalog IP</td>
+                <td>Must surrender copyright control. Buyout processes are slow, illiquid, and unsuited for unreleased tracks.</td>
+                <td class="highlight-col">
+                  <span class="check">✓</span> <strong>100% Copyright Retention</strong><br>
+                  Trading pure "stream volatility". Creators never surrender their intellectual property.
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <strong>Web3 Tokenization Platforms</strong>
+                  <span style="font-size: 0.85rem; color: var(--accent-purple);">e.g., Royal.io / Gala</span>
+                </td>
+                <td>Single-track NFT revenue shares</td>
+                <td>Highly reliant on fan speculation and illiquid secondary NFT markets. Weak appeal to institutional capital.</td>
+                <td class="highlight-col">
+                  <span class="check">✓</span> <strong>Standardized High Liquidity</strong><br>
+                  Utilizing SVVG pricing attracts institutional Quants and Market Makers to provide deep liquidity.
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <strong>Digital Service Providers (DSPs)</strong>
+                  <span style="font-size: 0.85rem; color: var(--accent-purple);">e.g., DistroKid / TuneCore</span>
+                </td>
+                <td>Distribution pipelines</td>
+                <td>Only provides listing infrastructure. Zero compensation or risk mitigation if the track fails.</td>
+                <td class="highlight-col">
+                  <span class="check">✓</span> <strong>Pre-Release Hedging (Puts)</strong><br>
+                  Buy insurance before release. Get compensated if algorithmic reach underperforms.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- Matrix -->
+    <section id="matrix" class="section">
+      <div class="container">
+        <span class="badge purple">Ecosystem Matrix</span>
+        <h2>Participation Matrix</h2>
+        <p class="lead">The intersection of Call and Put options perfectly aligns the risk appetites of creators, investors, and quantitative market makers.</p>
+
+        <div class="matrix-grid">
+          <!-- Call Option Column -->
+          <div class="matrix-col">
+            <div class="matrix-header call-header">
+              <h3>CALL OPTION</h3>
+              <span>Bet on virality, earn leveraged dividends</span>
+            </div>
+            <div class="matrix-body">
+              <div class="matrix-item">
+                <div class="matrix-title">
+                  Long <span class="tag tag-long">Pay Premium</span>
+                </div>
+                <p><strong>Participants:</strong> Investors, Fans, Speculators</p>
+                <p><strong>Strategy:</strong> Use micro-premiums to bet on emerging tracks. No need for massive capital to buy out IP; share in massive exponential returns if a track achieves viral status.</p>
+              </div>
+              <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 24px 0;">
+              <div class="matrix-item">
+                <div class="matrix-title">
+                  Short <span class="tag tag-short">Early Liquidity</span>
+                </div>
+                <p><strong>Participants:</strong> Artists, Major Labels</p>
+                <p><strong>Strategy:</strong> Creators sacrifice the "extreme tail" of viral profits in exchange for immediate upfront production capital. Labels can write covered calls on stable back-catalogs for risk-free yield.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Put Option Column -->
+          <div class="matrix-col" style="border-color: rgba(139, 92, 246, 0.4); box-shadow: var(--shadow-purple);">
+            <div class="matrix-header put-header" style="background: rgba(139, 92, 246, 0.05); border-bottom-color: rgba(139, 92, 246, 0.2);">
+              <h3 style="color: var(--accent-purple);">PUT OPTION</h3>
+              <span>Fear stream drops, build a downside moat</span>
+            </div>
+            <div class="matrix-body">
+              <div class="matrix-item">
+                <div class="matrix-title">
+                  Long <span class="tag tag-long">Hedging Insurance</span>
+                </div>
+                <p><strong>Participants:</strong> Artists, Indie Labels</p>
+                <p><strong>Strategy:</strong> Insure high-budget releases. If post-launch streams crash below the strike price, receive an automated cash payout to cover sunk marketing costs. Pure downside protection.</p>
+              </div>
+              <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 24px 0;">
+              <div class="matrix-item">
+                <div class="matrix-title">
+                  Short <span class="tag tag-short">Steady Yield</span>
+                </div>
+                <p><strong>Participants:</strong> Market Makers, Institutions</p>
+                <p><strong>Strategy:</strong> Act as the music industry's "insurance provider." By filtering tracks through quantitative models, institutions harvest steady premium income as long as tracks avoid total failure.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Terminal Look -->
+        <div class="code-block">
+          <div class="code-line"><span class="code-comment">// SYSTEM_INITIALIZATION_SUCCESSFUL</span></div>
+          <div class="code-line">> Loading SVVG_Model_v3.0... <span style="color: #fff;">[DONE]</span></div>
+          <div class="code-line">> Scanning Oracle Feeds (Spotify/YouTube API)... <span style="color: #fff;">[DONE]</span></div>
+          <div class="code-line">> Detecting Hawkes Self-Excitation Events... <span style="color: #fff;">[NONE]</span></div>
+          <div class="code-line"><br></div>
+          <div class="code-line"><span class="code-keyword">struct</span> OptionContract {</div>
+          <div class="code-line">  asset: <span class="code-string">"Track_ID_A49"</span>,</div>
+          <div class="code-line">  type: <span class="code-string">"Asian_Put_Option"</span>,</div>
+          <div class="code-line">  strike_streams_avg: <span class="code-string">5,000,000</span>,</div>
+          <div class="code-line">  oracle_verified_streams: <span style="color: var(--accent-pink);">2,100,000</span></div>
+          <div class="code-line">}</div>
+          <div class="code-line">> Status: Threshold breached. Underperformance detected.</div>
+          <div class="code-line">> Action: <span style="color: var(--accent-green);">Executing payout to Artist wallet... Transaction Confirmed.</span></div>
+          <div class="code-line"><br></div>
+          <div class="code-line">root@volume-quant:~$<span class="cursor"></span></div>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <footer style="text-align: center; padding: 40px; color: var(--text-muted); border-top: 1px solid var(--border-color); margin-top: 40px; font-size: 0.9rem;">
+    &copy; 2024 VOLUME Quantitative Market Design. All Rights Reserved.
+  </footer>
+
+</body>
+</html>
